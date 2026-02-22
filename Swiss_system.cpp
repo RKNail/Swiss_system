@@ -1,6 +1,17 @@
 #include "Swiss_system.h"
+#include <random>
+#include <limits>
+
+using namespace std;
+
+const unsigned int INF = 1e9;
+int best_cost = INF;
+vector<pair<int, int>> best_matching;
+vector<pair<int,int>> current;
+
 unsigned int players_cnt;
 vector <vector<int>> played;
+vector <Player> players;
 
 bool player_cmp(const Player& p1, const Player& p2) {
     if (p1.score != p2.score) {
@@ -21,14 +32,17 @@ ostream& operator<<(ostream& os, Player& P) {
 Player::Player(const string& name,
            const string& surname,
            const string& group,
-           const int& rating,
-           const int& id) : rating(rating), id(id),
+           const int rating,
+           const int id) : rating(rating), id(id),
           name(name + " " + surname + " " + group) {}
 
 Player::Player(const int id) : rating(0), id(id), name("bye") {
 }
 
-vector<Player> players(const int cnt) {
+void registration() {
+    int cnt;
+    cout << "Введи количество игроков: ";
+    cin >> cnt;
     vector<Player> lst;
     lst.reserve(cnt + 1);
     cout << "Вводи параметры каждого игрока следующим образом через пробел:"
@@ -50,15 +64,80 @@ vector<Player> players(const int cnt) {
     for (int i = 0; i < players_cnt; ++i) {
         played[i][i] = 1e5;
     }
-
-    return lst;
+    players = lst;
 }
 
-unsigned long long cost(const Player& p1, const Player& p2) {
-    unsigned long long fine = 0;
+int pair_cost(const Player& p1, const Player& p2) {
+    int fine = 0;
     fine += played[p1.id][p2.id] * 1000;
-    fine += abs(10*p1.score - 10*p2.score);
-    fine += abs(p1.rating - p2.rating);
+    fine += static_cast<int>(std::abs(p1.score - p2.score) * 200);
+    fine += std::abs(p1.rating - p2.rating) * 10;
     return fine;
 }
 
+int pick_unpaired() {
+    for (int i = 0; i < players_cnt; ++i)
+        if (!players[i].paired)
+            return i;
+    return -1;
+}
+
+void dfs(int current_cost) {
+    if (current_cost >= best_cost)
+        return;
+
+    int u = pick_unpaired();
+    if (u == -1) {
+        best_cost = current_cost;
+        best_matching = current;
+        return;
+    }
+
+    players[u].paired = true;
+
+    for (int v = u + 1; v < players_cnt; ++v) {
+        if (!players[v].paired) {
+            players[v].paired = true;
+
+            current.emplace_back(players[u].id, players[v].id);
+            dfs(current_cost + pair_cost(players[v], players[u]));
+            current.pop_back();
+
+            players[v].paired = false;
+        }
+    }
+
+    players[u].paired = false;
+}
+
+void tournament() {
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<int> distrib(1, 50);
+
+    int tours;
+    cout << "Введи количество туров: ";
+    cin >> tours;
+    cout << endl << endl;
+    registration();
+    while (tours--) {
+        dfs(0);
+        best_cost = INF;
+        cout << "Тур №" << tours + 1 << ":" << endl << endl;
+        for (auto& it : best_matching) {
+            const int random = distrib(gen) & 1;
+            played[players[it.first].id][players[it.second].id]++;
+            played[players[it.second].id][players[it.first].id]++;
+            if (random) {
+                cout << players[it.second].name << " " << players[it.first].name << endl;
+            } else {
+                cout << players[it.first] << " : " << players[it.second] << endl;
+            }
+        }
+    }
+    for (auto& it : players) {
+        if (it.name != "bye") {
+            cout << it << endl;
+        }
+    }
+}
