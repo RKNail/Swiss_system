@@ -1,28 +1,31 @@
 #ifndef PROJECT_H
 #define PROJECT_H
+
 #pragma once
+
 #include <iostream>
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <math.h>
+#include <format>
 
 using namespace std;
 
 struct Player {
     int rating;
-    double score;
-    bool prev_white;
     int id;
-    bool is_playing;
-    int played_as_white;
+    double score = 0;
+    bool paired = false;
     string name;
+    explicit Player(int);
+    Player(const string&, const string&, const string&, const int&, const int&);
 };
 
-vector <Player> make_table(int players);
-vector <vector<bool>> make_played(int players);
-vector <pair <Player, Player>> print_tour(vector <Player>& table, vector<vector<bool>>& played, int tour);
-void change_params(vector <Player>& table, vector <pair <Player, Player>> cur_tour);
-void tournament(vector <Player>& table, vector<vector<bool>>& played, int tours);
+ostream& operator<<(ostream&, Player&);
+
+vector <Player> players(int cnt);
+vector <pair<Player, Player>> form_tour(const vector <Player>& players, int tour);
+unsigned long long cost(const Player& P1, const Player& P2);
+
 
 #endif
