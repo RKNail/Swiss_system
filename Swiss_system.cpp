@@ -1,6 +1,7 @@
 #include "Swiss_system.h"
 #include <random>
 #include <limits>
+#include <format>
 
 using namespace std;
 
@@ -24,8 +25,7 @@ bool player_cmp(const Player& p1, const Player& p2) {
 }
 
 ostream& operator<<(ostream& os, Player& P) {
-    os << format("Player info: \nName : {0}\nRating : {1}\nScore : {2}\n",
-        P.name, P.rating, P.score);
+    os << "Player info: \nName: " << P.name << endl << "Score: " << P.score << endl << "Rating: " << P.rating << endl;
     return os;
 }
 
